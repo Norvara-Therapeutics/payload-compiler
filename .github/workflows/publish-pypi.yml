@@ -1,0 +1,79 @@
+name: Publish tagged release to PyPI
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Annotated release tag to publish
+        required: true
+        default: v0.9.0rc1
+        type: string
+
+jobs:
+  build:
+    name: Verify and build ${{ inputs.tag }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.tag }}
+          persist-credentials: false
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install build and verification tools
+        run: python -m pip install ".[dev]" build twine
+      - name: Verify tag and package versions
+        shell: bash
+        run: |
+          package_version="$(python -c 'import tomllib; print(tomllib.load(open("pyproject.toml", "rb"))["project"]["version"])')"
+          test "v${package_version}" = "${{ inputs.tag }}"
+          python - <<'PY'
+          import ast
+          import pathlib
+          import tomllib
+
+          configured = tomllib.load(open("pyproject.toml", "rb"))["project"]["version"]
+          version_line = next(
+              line
+              for line in pathlib.Path("src/payload_compiler/__init__.py").read_text().splitlines()
+              if line.startswith("__version__ = ")
+          )
+          runtime = ast.literal_eval(version_line.partition("=")[2].strip())
+          assert configured == runtime, f"version mismatch: {configured} != {runtime}"
+          PY
+      - name: Run tests
+        run: python -m pytest
+      - name: Check Python sources
+        run: python -m ruff check src tests
+      - name: Build distributions
+        run: python -m build
+      - name: Validate distributions
+        run: python -m twine check dist/*
+      - name: Store distributions for publishing
+        uses: actions/upload-artifact@v5
+        with:
+          name: python-package-distributions
+          path: dist/
+          if-no-files-found: error
+
+  publish:
+    name: Publish ${{ inputs.tag }} to PyPI
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: pypi
+      url: https://pypi.org/p/norvara-payload-compiler
+    permissions:
+      id-token: write
+    steps:
+      - name: Download verified distributions
+        uses: actions/download-artifact@v6
+        with:
+          name: python-package-distributions
+          path: dist/
+      - name: Publish distributions to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1

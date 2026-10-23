@@ -1,0 +1,14 @@
+LOCUS       golden                 12 bp    DNA     linear       UNK 21-OCT-2026
+DEFINITION  Golden synthetic verification fixture.
+ACCESSION   golden
+VERSION     golden
+KEYWORDS    .
+SOURCE      .
+  ORGANISM  .
+            .
+FEATURES             Location/Qualifiers
+     CDS             1..12
+                     /translation="MAA*"
+ORIGIN
+        1 atggccgcttaa
+//

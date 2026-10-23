@@ -1,0 +1,56 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "norvara-payload-compiler"
+version = "0.9.0rc1"
+description = "CpG refactoring, payload linting and AAV vector size accounting for DNA payloads"
+readme = "README.md"
+requires-python = ">=3.11"
+license = "PolyForm-Noncommercial-1.0.0"
+license-files = ["LICENSE"]
+authors = [
+    { name = "Norvara Therapeutics", email = "research@norvaratx.com" },
+]
+maintainers = [
+    { name = "Norvara Therapeutics", email = "research@norvaratx.com" },
+]
+keywords = ["bioinformatics", "DNA", "AAV", "codon-optimization", "sequence-analysis"]
+classifiers = [
+    "Intended Audience :: Science/Research",
+    "Programming Language :: Python :: 3",
+    "Topic :: Scientific/Engineering :: Bio-Informatics",
+]
+dependencies = [
+    "biopython>=1.85,<2",
+    "pydantic>=2.10,<3",
+    "seqfold>=0.10.2,<0.11",
+    "typer>=0.15,<1",
+]
+
+[project.urls]
+Homepage = "https://github.com/Norvara-Therapeutics/payload-compiler"
+Repository = "https://github.com/Norvara-Therapeutics/payload-compiler.git"
+Issues = "https://github.com/Norvara-Therapeutics/payload-compiler/issues"
+
+[project.optional-dependencies]
+dev = ["pytest>=8,<10", "ruff>=0.9,<1", "build>=1.2,<2", "hypothesis>=6.100,<7"]
+
+[project.scripts]
+payload-compiler = "payload_compiler.cli:app"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra"
+markers = ["integration: requires an external system executable"]
+
+[tool.ruff]
+target-version = "py311"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
